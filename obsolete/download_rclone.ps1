@@ -1,3 +1,5 @@
+# TODO legacy, use scoop install rclone
+
 $apps = "../apps"
 $rcloneRoot = "$apps/rclone"
 New-Item -ItemType Directory $rcloneRoot

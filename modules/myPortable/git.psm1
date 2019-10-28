@@ -71,10 +71,16 @@ function Update-GitRepository {
     [CmdletBinding()]
     param (
         [parameter()]
-        [UInt32]$Depth = 1
+        [UInt32]$Depth = 1,
+        [switch]$ShowLog
     )
 
     $env:LC_ALL='C.UTF-8'
+    $SavedInformationPreference = $InformationPreference
+
+    if ($ShowLog) {
+        $InformationPreference = 'Continue'
+    }
 
     $gitFullPath = (Get-Command -CommandType Application git -ErrorAction Stop).Source
 
@@ -90,11 +96,15 @@ function Update-GitRepository {
             Write-Progress -Activity "Processing git pull" -Status "Repository ($repositoryPath)" -PercentComplete ($repositoryIndex * 100 / $RepositoryCollection.length)
             Write-Information "Processing $repositoryPath"
 
-            Start-ProcessWithOutputStreaming -FilePath $gitFullPath -ArgumentList "pull" -WorkingDirectory $repositoryPath | Out-Null
+            Start-ProcessWithOutputStreaming -FilePath $gitFullPath -ArgumentList "pull","--progress" -WorkingDirectory $repositoryPath | Out-Null
         }
     }
     finally {
         Pop-Location
+
+        if ($ShowLog) {
+            $InformationPreference = $SavedInformationPreference
+        }
     }
 }
 

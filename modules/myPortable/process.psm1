@@ -21,12 +21,16 @@ function Start-ProcessWithOutputStreaming {
     $OutputDataReceivedHandler = {
         if ($null -ne $EventArgs.Data) {
             Write-Information $EventArgs.Data
+        } else {
+            # Write-Information "StandardOutput stream closed"
         }
     }
 
     $ErrorDataReceivedHandler = {
         if ($null -ne $EventArgs.Data) {
-            Write-Error $EventArgs.Data
+            Write-Warning $EventArgs.Data
+        } else {
+            # Write-Information "StandardError stream closed"
         }
     }
 
@@ -48,6 +52,8 @@ function Start-ProcessWithOutputStreaming {
         Start-Sleep -Milliseconds 50
     } while (!$process.HasExited)
 
+    # $process.CancelOutputRead();
+    # $process.CancelErrorRead();
     $process.WaitForExit()
 
     # Unregistering events to retrieve process output.
