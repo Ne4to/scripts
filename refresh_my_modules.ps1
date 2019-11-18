@@ -1,6 +1,6 @@
 Get-Module |
   Where-Object {
-    $_.ModuleType -eq 'Script' -and $_.Path.StartsWith('C:\scripts')
+    $_.ModuleType -eq 'Script' -and $_.Path.StartsWith("$($env:HOME)\projects\GitHub\Ne4to\scripts\modules")
   } |
   ForEach-Object {
     Remove-MOdule $_.Name
