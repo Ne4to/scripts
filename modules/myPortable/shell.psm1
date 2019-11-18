@@ -20,6 +20,12 @@ Set-Alias -Name .... -Value SPL3
 function SPL4 {Set-ParentLocation -Depth 4}
 Set-Alias -Name ..... -Value SPL4
 
-Export-ModuleMember -Function Set-ParentLocation
+function Set-LocationToProjects {
+  $FullPath = Join-Path -Path $env:HOME "projects"
+  Set-Location $FullPath
+}
+Set-Alias -Name cdp -Value Set-LocationToProjects
+
+Export-ModuleMember -Function Set-ParentLocation,Set-LocationToProjects
 Export-ModuleMember -Function SPL1,SPL2,SPL3,SPL4
-Export-ModuleMember -Alias ..,...,....,.....
+Export-ModuleMember -Alias ..,...,....,.....,cdp
