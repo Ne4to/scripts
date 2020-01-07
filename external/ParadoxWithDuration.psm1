@@ -63,33 +63,32 @@ function Write-Theme {
         Grey = "`e[37;0m"
     }
 
-    $lastCmdTime = ""
     $lastCmd = Get-History -Count 1
     if ($null -ne $lastCmd) {
         $cmdTime = $lastCmd.Duration.TotalMilliseconds
         $units = "ms"
         $timeColor = $color.Green
         if ($cmdTime -gt 250 -and $cmdTime -lt 1000) {
-        $timeColor = $color.Yellow
+            $timeColor = $color.Yellow
         } elseif ($cmdTime -ge 1000) {
-        $timeColor = $color.Red
-        $units = "s"
-        $cmdTime = $lastCmd.Duration.TotalSeconds
-        if ($cmdTime -ge 60) {
-            $units = "m"
-            $cmdTIme = $lastCmd.Duration.TotalMinutes
-        }
+            $timeColor = $color.Red
+            $units = "s"
+            $cmdTime = $lastCmd.Duration.TotalSeconds
+            if ($cmdTime -ge 60) {
+                $units = "m"
+                $cmdTime = $lastCmd.Duration.TotalMinutes
+            }
         }
 
-        $lastCmdTime = "$($color.Grey)[$timeColor$($cmdTime.ToString("#.##"))$units$($color.Grey)]$($color.Reset) "
-
-        $prompt += Set-CursorForRightBlockWrite -textLength ($lastCmdTime.Length + $timestamp.Length + 1 - 8 - 8 - 8)
-        $prompt += $lastCmdTime
+        $prompt += Set-CursorForRightBlockWrite -textLength ($cmdTime.ToString("#.##").Length + $units.Length + $timestamp.Length + 1)
+        $prompt += Write-Prompt $cmdTime.ToString("#.##")
+        $prompt += Write-Prompt $units
+        $prompt += Write-Prompt ' '
+        $prompt += Write-Prompt $timeStamp -ForegroundColor $sl.Colors.PromptForegroundColor
+    } else {
+        $prompt += Set-CursorForRightBlockWrite -textLength ($timestamp.Length + 1)
+        $prompt += Write-Prompt $timeStamp -ForegroundColor $sl.Colors.PromptForegroundColor
     }
-
-
-    $prompt += Set-CursorForRightBlockWrite -textLength ($timestamp.Length + 1)
-    $prompt += Write-Prompt $timeStamp -ForegroundColor $sl.Colors.PromptForegroundColor
 
     $prompt += Set-Newline
 
