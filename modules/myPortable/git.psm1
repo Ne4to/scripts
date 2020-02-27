@@ -108,5 +108,42 @@ function Update-GitRepository {
     }
 }
 
+function Get-GitRepositoryOrigin {
+    [CmdletBinding()]
+    param (
+        [parameter()]
+        [UInt32]$Depth = 1
+    )
+
+    $env:LC_ALL='C.UTF-8'
+    $gitFullPath = (Get-Command -CommandType Application git -ErrorAction Stop).Source
+
+    Push-Location
+
+    try {
+        $RepositoryCollection = Get-ChildItem -Include ".git" -Recurse -Depth $Depth -Directory -Attributes Hidden
+
+        for ($repositoryIndex = 0; $repositoryIndex -lt $RepositoryCollection.length; $repositoryIndex++) {
+            $repository = $RepositoryCollection[$repositoryIndex]
+            $repositoryPath = $repository.Parent.FullName
+
+            Write-Progress -Activity "Processing git pull" -Status "Repository ($repositoryPath)" -PercentComplete ($repositoryIndex * 100 / $RepositoryCollection.length)
+            Write-Information "Processing $repositoryPath"
+
+            $process = Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "config","--get","remote.origin.url" -WorkingDirectory $repositoryPath
+            $objProps = @{
+            Path = $repositoryPath
+            Origin = $process.StandardOutput
+            }
+            $obj = New-Object psobject -Property $objProps
+            Write-Output $obj
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 Export-ModuleMember -Function Get-GitRepositoryModifiedFiles
 Export-ModuleMember -Function Update-GitRepository
+Export-ModuleMember -Function Get-GitRepositoryOrigin
