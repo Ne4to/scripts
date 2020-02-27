@@ -20,7 +20,7 @@ if ([System.Boolean]::Parse($env:SHOW_STAT)) {
       }
     } |
     Sort-Object TotalSize -Descending |
-    Format-Table  -AutoSize `
+    Format-Table -AutoSize `
       Count,
       @{Label = "Total Size"; Expression = {([long]($_.TotalSize)).ToString("N0")}; Alignment = "Right" },
       Extension
@@ -29,9 +29,22 @@ if ([System.Boolean]::Parse($env:SHOW_STAT)) {
 
   Get-ChildItem -Recurse -File |
     Where-Object Length -gt $MinSize |
-    Select-Object -Property FullName,Length |
+    Select-Object -Property FullName,LastWriteTime,Length |
     Sort-Object Length |
-    Format-Table -Wrap @{Label = "Size(Kb)"; Expression = {[int]($_.Length / 1024)}},@{Label = "FullName"; Expression = {$_.FullName}} |
+    # Sort-Object LastWriteTime -Descending |
+    Format-Table -Wrap @{
+        Label = "Size";
+        Expression = {($_.Length).ToString("N0")};
+        Alignment = "Right";
+        Width = 10
+      },@{
+        Label = "LastWriteTime";
+        Expression = {$_.LastWriteTime};
+        Width = 35
+      },@{
+        Label = "FullName";
+        Expression = {$_.FullName}
+      } |
     Out-String -Width 220
 }
 

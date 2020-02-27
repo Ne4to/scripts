@@ -18,7 +18,7 @@ CMD pwsh -c ''$MinSize = [int]($env:MIN_SIZE_KB)*1024;\
     Where-Object Length -gt $MinSize |\
     Select-Object -Property FullName,Length |\
     Sort-Object Length |\
-    Format-Table -Wrap @{Label = "Size(Kb)"; Expression = {[int]($_.Length / 1024)}},@{Label = "FullName"; Expression = {$_.FullName.Substring(14)}} |\
+    Format-Table -Wrap @{Label = "Size"; Expression = {[int]($_.Length / 1024)}},@{Label = "FullName"; Expression = {$_.FullName}} |\
     Out-String -Width 220 ''
 ' | docker build -t build-context -f - . | Out-Null
 

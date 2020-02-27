@@ -11,7 +11,8 @@ $Result = ""
 Get-ChildItem -Recurse global.json,*.sln,*.csproj |
   ForEach-Object {
     $RelativePath = Resolve-Path $_.FullName -Relative
-    $TargetPath = $RelativePath.Replace('src\', '')
+    # $TargetPath = $RelativePath.Replace('src\', '')
+    $TargetPath = $RelativePath
     $Command = -join("COPY ", $RelativePath, " ", $TargetPath)
     $Command = $Command.Replace('\', '/')
 
