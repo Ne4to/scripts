@@ -8,11 +8,17 @@ function Write-Theme {
         $with
     )
 
+    $prompt = ""
+    $prompt += Write-Prompt -Object "$(Get-Date -Format HH:mm:ss) " -ForegroundColor $s1.Colors.PromptForegroundColor
+
+    $cmdDuration = Get-LastCommandDuration
+    if ($cmdDuration) {
+        $prompt += Write-Prompt -Object "$cmdDuration " -ForegroundColor $s1.Colors.PromptForegroundColor
+    }
+
     $kubeContext = Get-KubectlContext
     if ($kubeContext) {
-        $prompt = Write-Prompt -Object "$($kubeContext.Name) $($kubeContext.Namespace) " -ForegroundColor $s1.Colors.PromptForegroundColor
-    } else {
-        $prompt = ""
+        $prompt += Write-Prompt -Object "$($kubeContext.Name) $($kubeContext.Namespace) " -ForegroundColor $s1.Colors.PromptForegroundColor
     }
 
     # $user = $s1.CurrentUser
