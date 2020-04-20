@@ -35,6 +35,7 @@ function Write-Theme {
         $prompt += Write-Prompt -Object "$gitbranchpre$($gitinfo.vcinfo)$gitbranchpost " -ForegroundColor $($gitinfo.backgroundcolor)
     }
 
+    $prompt += Set-Newline
     $prompt += Write-Prompt -Object $s1.PromptSymbols.PromptIndicator -ForegroundColor $s1.Colors.AdminIconForegroundColor
     $prompt += ' '
     $prompt
