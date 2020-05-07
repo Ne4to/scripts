@@ -18,33 +18,72 @@ function Show-Menu {
 function Build-KubectlContextConfigFiles {
     $contexts = $(kubectl config get-contexts -o name)
 
-    $contexts -split [System.Environment]::NewLine | `
+    $contexts -split [System.Environment]::NewLine |
         ForEach-Object {
-        Set-Content -Value "current-context: $_" -Path "$Home\.kube\context-$_"
-    }
+            Set-Content -Value "current-context: $_" -Path "$Home\.kube\context-$_"
+        }
 }
 
 function Set-KubectlContext {
-    # gci ~\.kube\context-* -File
-    $contexts = $(kubectl config get-contexts -o name) -split [System.Environment]::NewLine
+    param (
+        [string]$Name
+    )
 
-    $selection = Show-Menu –Title 'kubectl context' -MenuOptions $contexts
+    if ($Name) {
+        $selection = $Name
+    } else {
+        # gci ~\.kube\context-* -File
+        $contexts = $(kubectl config get-contexts -o name) -split [System.Environment]::NewLine
+
+        $selection = Show-Menu –Title 'kubectl context' -MenuOptions $contexts
+    }
+
     if ($selection) {
-        $env:KUBECONFIG = "$Home\.kube\context-$selection;$Home\.kube\config"
+        $ContextFilePath = "$Home\.kube\context-$selection"
+        if (! $(Test-Path $ContextFilePath)) {
+            throw "context file '$ContextFilePath' is not found, run Build-KubectlContextConfigFiles to generate context files"
+        }
+
+        $env:KUBECONFIG = "$ContextFilePath;$Home\.kube\config"
     }
 }
 
 Set-Alias -Name kubectx -Value Set-KubectlContext
 
+Register-ArgumentCompleter -CommandName Set-KubectlContext -ParameterName Name -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+    $(kubectl config get-contexts -o name) -split [System.Environment]::NewLine |
+        Where-Object { $_ -like "$wordToComplete*" } |
+        ForEach-Object { $_ }
+}
+
 function Set-KubectlNamespace {
-    $namespaces = $(kubectl get ns -o custom-columns=NAME:.metadata.name --no-headers) -split [System.Environment]::NewLine
-    $selection = Show-Menu –Title 'kubectl namespace' -MenuOptions $namespaces
+    param (
+        [string]$Name
+    )
+
+    if ($Name) {
+        $selection = $Name
+    } else {
+        $namespaces = $(kubectl get ns -o custom-columns=NAME:.metadata.name --no-headers) -split [System.Environment]::NewLine
+        $selection = Show-Menu –Title 'kubectl namespace' -MenuOptions $namespaces
+    }
+
     if ($selection) {
         kubectl config set-context --current --namespace=$selection
     }
 }
 
 Set-Alias -Name kubens -Value Set-KubectlNamespace
+
+Register-ArgumentCompleter -CommandName Set-KubectlNamespace -ParameterName Name -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+    $(kubectl get ns -o custom-columns=NAME:.metadata.name --no-headers) -split [System.Environment]::NewLine |
+        Where-Object { $_ -like "$wordToComplete*" } |
+        ForEach-Object { $_ }
+}
 
 function Get-KubectlContext {
     $kubeContext = (kubectl config view --minify -o json | ConvertFrom-Json -AsHashTable)
@@ -57,5 +96,3 @@ function Get-KubectlContext {
 }
 
 Export-ModuleMember -Function Build-KubectlContextConfigFiles, Set-KubectlContext, Set-KubectlNamespace, Get-KubectlContext -Alias *
-
-
