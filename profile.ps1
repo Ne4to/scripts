@@ -19,6 +19,7 @@ if (! $HasKubectlAliases) {
 }
 
 . $Home\Documents\PowerShell\kubectl_aliases.ps1
+function kksd() { & kubectl ksddotnet get secret -oyaml $args }
 
 # setup oh-my-posh theme
 $themeName = "tehrob-ne4to"
