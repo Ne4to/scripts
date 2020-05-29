@@ -28,10 +28,10 @@ if ([System.Boolean]::Parse($env:SHOW_STAT)) {
   Write-Host "Min size: $env:MIN_SIZE_KB Kb"
 
   Get-ChildItem -Recurse -File |
-    Where-Object Length -gt $MinSize |
+    Where-Object Length -ge $MinSize |
     Select-Object -Property FullName,LastWriteTime,Length |
-    Sort-Object Length |
-    # Sort-Object LastWriteTime -Descending |
+    # Sort-Object Length |
+    Sort-Object LastWriteTime -Descending |
     Format-Table -Wrap @{
         Label = "Size";
         Expression = {($_.Length).ToString("N0")};

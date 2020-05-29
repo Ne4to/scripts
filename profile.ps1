@@ -20,6 +20,7 @@ if (! $HasKubectlAliases) {
 
 . $Home\Documents\PowerShell\kubectl_aliases.ps1
 function kksd() { & kubectl ksddotnet get secret -oyaml $args }
+function time { Param([ScriptBlock]$cmd) Measure-Command { . $cmd | Out-Default } | Select-Object TotalSeconds }
 
 # setup oh-my-posh theme
 $themeName = "tehrob-ne4to"
