@@ -13,12 +13,12 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
 }
 
 # setup kubectl aliases
-$HasKubectlAliases = Test-Path "$Home\Documents\PowerShell\kubectl_aliases.ps1"
-if (! $HasKubectlAliases) {
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/shanoor/kubectl-aliases-powershell/master/kubectl_aliases.ps1" -OutFile "$Home\Documents\PowerShell\kubectl_aliases.ps1"
-}
+# $HasKubectlAliases = Test-Path "$Home\Documents\PowerShell\kubectl_aliases.ps1"
+# if (! $HasKubectlAliases) {
+#     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/shanoor/kubectl-aliases-powershell/master/kubectl_aliases.ps1" -OutFile "$Home\Documents\PowerShell\kubectl_aliases.ps1"
+# }
 
-. $Home\Documents\PowerShell\kubectl_aliases.ps1
+. $Home\projects\GitHub\Ne4to\scripts\kubectl_aliases.ps1
 function kksd() { & kubectl ksddotnet get secret -oyaml $args }
 function time { Param([ScriptBlock]$cmd) Measure-Command { . $cmd | Out-Default } | Select-Object TotalSeconds }
 
