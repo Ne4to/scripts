@@ -54,7 +54,7 @@ Register-ArgumentCompleter -CommandName Set-KubectlContext -ParameterName Name -
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
     $(kubectl config get-contexts -o name) -split [System.Environment]::NewLine |
-        Where-Object { $_ -like "$wordToComplete*" } |
+        Where-Object { $_ -like "*$wordToComplete*" } |
         ForEach-Object { $_ }
 }
 
@@ -81,7 +81,7 @@ Register-ArgumentCompleter -CommandName Set-KubectlNamespace -ParameterName Name
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
     $(kubectl get ns -o custom-columns=NAME:.metadata.name --no-headers) -split [System.Environment]::NewLine |
-        Where-Object { $_ -like "$wordToComplete*" } |
+        Where-Object { $_ -like "*$wordToComplete*" } |
         ForEach-Object { $_ }
 }
 
