@@ -1,20 +1,5 @@
 Set-StrictMode -Version 'Latest'
 
-function Show-Menu {
-    param (
-        [string]$Title = 'Menu',
-        [string[]]$MenuOptions
-    )
-    Write-Host "================ $Title ================"
-
-    for ($optionIndex = 0; $optionIndex -lt $MenuOptions.Count; $optionIndex++) {
-        Write-Host "$($optionIndex + 1): $($MenuOptions[$optionIndex])"
-    }
-
-    $selection = Read-Host "Please make a selection"
-    return $MenuOptions[$selection - 1]
-}
-
 function Build-KubectlContextConfigFiles {
     $contexts = $(kubectl config get-contexts -o name)
 
@@ -35,7 +20,7 @@ function Set-KubectlContext {
         # gci ~\.kube\context-* -File
         $contexts = $(kubectl config get-contexts -o name) -split [System.Environment]::NewLine
 
-        $selection = Show-Menu –Title 'kubectl context' -MenuOptions $contexts
+        $selection = ($contexts | Invoke-Fzf)
     }
 
     if ($selection) {
@@ -67,7 +52,7 @@ function Set-KubectlNamespace {
         $selection = $Name
     } else {
         $namespaces = $(kubectl get ns -o custom-columns=NAME:.metadata.name --no-headers) -split [System.Environment]::NewLine
-        $selection = Show-Menu –Title 'kubectl namespace' -MenuOptions $namespaces
+        $selection = ($namespaces | Invoke-Fzf)
     }
 
     if ($selection) {
