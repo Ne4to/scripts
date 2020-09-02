@@ -144,6 +144,13 @@ function Get-GitRepositoryOrigin {
     }
 }
 
+function Open-GitExtensions {
+    Start-Process gite.exe -ArgumentList 'openrepo','.' -NoNewWindow
+}
+
+Set-Alias -Name gite -Value Open-GitExtensions
+
 Export-ModuleMember -Function Get-GitRepositoryModifiedFiles
 Export-ModuleMember -Function Update-GitRepository
 Export-ModuleMember -Function Get-GitRepositoryOrigin
+Export-ModuleMember -Function Open-GitExtensions -Alias gite
