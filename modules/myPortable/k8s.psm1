@@ -1,12 +1,13 @@
 Set-StrictMode -Version 'Latest'
 
-function Build-KubectlContextConfigFiles {
-    $contexts = $(kubectl config get-contexts -o name)
+[string]$global:KubeConfigPath = $null
 
-    $contexts -split [System.Environment]::NewLine |
-        ForEach-Object {
-            Set-Content -Value "current-context: $_" -Path "$Home\.kube\context-$_"
-        }
+function Set-KubeConfig {
+    if ($global:KubeConfigPath) { return }
+
+    $global:KubeConfigPath = New-TemporaryFile
+    Copy-Item "$Home\.kube\config" $global:KubeConfigPath
+    $env:KUBECONFIG = "$global:KubeConfigPath;$Home\.kube\config"
 }
 
 function Set-KubectlContext {
@@ -24,12 +25,8 @@ function Set-KubectlContext {
     }
 
     if ($selection) {
-        $ContextFilePath = "$Home\.kube\context-$selection"
-        if (! $(Test-Path $ContextFilePath)) {
-            throw "context file '$ContextFilePath' is not found, run Build-KubectlContextConfigFiles to generate context files"
-        }
-
-        $env:KUBECONFIG = "$ContextFilePath;$Home\.kube\config"
+        Set-KubeConfig
+        kubectl config use-context $selection
     }
 }
 
@@ -56,6 +53,7 @@ function Set-KubectlNamespace {
     }
 
     if ($selection) {
+        Set-KubeConfig
         kubectl config set-context --current --namespace=$selection
     }
 }
@@ -80,4 +78,4 @@ function Get-KubectlContext {
     }
 }
 
-Export-ModuleMember -Function Build-KubectlContextConfigFiles, Set-KubectlContext, Set-KubectlNamespace, Get-KubectlContext -Alias *
+Export-ModuleMember -Function Set-KubectlContext, Set-KubectlNamespace, Get-KubectlContext -Alias *
