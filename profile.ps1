@@ -10,7 +10,7 @@ if (!(Get-Module oh-my-posh -ListAvailable)) {
 }
 Import-Module oh-my-posh
 
-# `scoop install fzf` first 
+# `scoop install fzf` first
 if (!(Get-Module PSFzf -ListAvailable)) {
     Install-Module -Name PSFzf
 }
@@ -43,6 +43,7 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
 # }
 
 . $Home\projects\GitHub\Ne4to\scripts\kubectl_aliases.ps1
+function krrd() { & kubectl rollout restart deployment $args }
 function kksd() { & kubectl ksddotnet get secret -oyaml $args }
 function time {
     Param([ScriptBlock]$cmd)
