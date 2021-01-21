@@ -1,1 +1,0 @@
-scoop list 6> ./../configs/scoop_list.txt
