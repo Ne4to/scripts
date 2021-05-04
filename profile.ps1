@@ -51,6 +51,19 @@ function time {
         Select-Object TotalSeconds
 }
 
+function watch {
+    Param(
+        [ScriptBlock]$cmd,
+        [int]$Seconds = 1
+    )
+
+    while ($true) {
+        . $cmd | Out-Default
+        Write-Host
+        Start-Sleep -Seconds $Seconds
+    }
+}
+
 # setup oh-my-posh theme
 $themeName = "tehrob-ne4to"
 $theme = get-theme | Where-Object Name -eq $themeName
