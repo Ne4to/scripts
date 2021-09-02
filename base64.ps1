@@ -14,6 +14,11 @@ if ($Mode -eq "Encode") {
         $Bytes = [IO.File]::ReadAllBytes($SourceFilePath)
     }
 
+    if ($FromClipboard) {
+        $Text = Get-ClipboardText
+        $Bytes = [System.Text.UTF8Encoding]::UTF8.GetBytes($Text)
+    }
+
     $Base64 = [Convert]::ToBase64String($Bytes)
 
     if ($ToClipboard) {
