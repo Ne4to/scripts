@@ -16,6 +16,14 @@ if (!(Get-Module PSFzf -ListAvailable)) {
 }
 Import-Module PSFzf
 
+# install PSReadLine
+if (!(Get-Module PSReadLine -ListAvailable)) {
+    Install-Module PSReadLine -AllowPrerelease -Force
+}
+Import-Module PSReadLine
+Set-PSReadLineOption -PredictionSource History
+Set-PSReadLineOption -PredictionViewStyle ListView
+
 $modulesPath = Join-Path -Path ~ -ChildPath "projects\GitHub\Ne4to\scripts\modules"
 if (Test-Path $modulesPath) {
     Get-ChildItem $modulesPath -Filter *.psm1 -Recurse |
