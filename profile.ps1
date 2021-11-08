@@ -3,6 +3,7 @@
 # requirements
 # - install oh-my-posh: winget install JanDeDobbeleer.OhMyPosh
 # - fzf first: https://github.com/junegunn/fzf/releases
+# - install fonts: https://github.com/ryanoasis/nerd-fonts/releases/
 
 if (!(Get-Module Terminal-Icons -ListAvailable)) {
     Install-Module Terminal-Icons
@@ -59,6 +60,6 @@ function watch {
 }
 
 # setup oh-my-posh
-oh-my-posh --init --shell pwsh --config C:\Users\Ne4to\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json | Invoke-Expression
+oh-my-posh --init --shell pwsh --config $Home\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json | Invoke-Expression
 
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
