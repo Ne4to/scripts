@@ -7,6 +7,6 @@ if (Test-Path $profile) {
 
 $GitHubProfilePath = Join-Path -Path $HOME -ChildPath "projects\GitHub\Ne4to\scripts\profile.ps1"
 if (Test-Path $GitHubProfilePath) {
-    Remove-Item $profile -Force
+    Remove-Item $profile -Force -ErrorAction SilentlyContinue
     New-Item $profile -ItemType SymbolicLink -Value $GitHubProfilePath
 }

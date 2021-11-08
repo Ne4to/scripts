@@ -1,16 +1,15 @@
 #Requires -Version 7
 
-if (!(Get-Module posh-git -ListAvailable)) {
-    Install-Module posh-git
-}
-Import-Module posh-git
+# requirements
+# - install oh-my-posh: winget install JanDeDobbeleer.OhMyPosh
+# - fzf first: https://github.com/junegunn/fzf/releases
 
-if (!(Get-Module oh-my-posh -ListAvailable)) {
-    Install-Module oh-my-posh
+if (!(Get-Module Terminal-Icons -ListAvailable)) {
+    Install-Module Terminal-Icons
 }
-Import-Module oh-my-posh
+Import-Module Terminal-Icons
 
-# `scoop install fzf` first
+# install fzf first
 if (!(Get-Module PSFzf -ListAvailable)) {
     Install-Module -Name PSFzf
 }
@@ -37,11 +36,6 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
 }
 
 # setup kubectl aliases
-# $HasKubectlAliases = Test-Path "$Home\Documents\PowerShell\kubectl_aliases.ps1"
-# if (! $HasKubectlAliases) {
-#     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/shanoor/kubectl-aliases-powershell/master/kubectl_aliases.ps1" -OutFile "$Home\Documents\PowerShell\kubectl_aliases.ps1"
-# }
-
 . $Home\projects\GitHub\Ne4to\scripts\kubectl_aliases.ps1
 function krrd() { & kubectl rollout restart deployment $args }
 function kksd() { & kubectl ksddotnet get secret -oyaml $args }
@@ -64,13 +58,7 @@ function watch {
     }
 }
 
-# setup oh-my-posh theme
-$themeName = "tehrob-ne4to"
-$theme = get-theme | Where-Object Name -eq $themeName
-if (! $theme) {
-    $version = [string](get-module oh-my-posh).Version
-    Copy-Item "$Home\projects\GitHub\Ne4to\scripts\external\$themeName.psm1" "$Home\Documents\PowerShell\Modules\oh-my-posh\$version\Themes\$themeName.psm1"
-}
+# setup oh-my-posh
+oh-my-posh --init --shell pwsh --config C:\Users\Ne4to\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json | Invoke-Expression
 
-Set-Theme $themeName
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
