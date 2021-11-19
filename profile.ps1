@@ -66,6 +66,9 @@ function watch {
         Start-Sleep -Seconds $Seconds
     }
 }
+function cpwd {
+    Get-Location | Set-Clipboard
+}
 
 # setup oh-my-posh
 oh-my-posh --init --shell pwsh --config $Home\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json | Invoke-Expression
