@@ -24,7 +24,11 @@ Import-Module PSReadLine
 Set-PSReadLineOption -PredictionSource History
 Set-PSReadLineOption -PredictionViewStyle ListView
 
-$modulesPath = Join-Path -Path ~ -ChildPath "projects\GitHub\Ne4to\scripts\modules"
+$modulesPath = Join-Path -Path ~ -ChildPath "projects\github.com\Ne4to\scripts\modules"
+if (-not (Test-Path $modulesPath)) {
+    $modulesPath = Join-Path -Path ~ -ChildPath "projects\GitHub\Ne4to\scripts\modules"
+}
+
 if (Test-Path $modulesPath) {
     Get-ChildItem $modulesPath -Filter *.psm1 -Recurse |
         ForEach-Object {
@@ -45,7 +49,12 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
 }
 
 # setup kubectl aliases
-. $Home\projects\GitHub\Ne4to\scripts\kubectl_aliases.ps1
+if (Test-Path $Home\projects\github.com\Ne4to\scripts\kubectl_aliases.ps1) {
+    . $Home\projects\github.com\Ne4to\scripts\kubectl_aliases.ps1
+}
+if (Test-Path $Home\projects\GitHub\Ne4to\scripts\kubectl_aliases.ps1) {
+    . $Home\projects\GitHub\Ne4to\scripts\kubectl_aliases.ps1
+}
 function krrd() { & kubectl rollout restart deployment $args }
 function kksd() { & kubectl ksddotnet get secret -oyaml $args }
 function time {
@@ -71,6 +80,12 @@ function cpwd {
 }
 
 # setup oh-my-posh
-oh-my-posh --init --shell pwsh --config $Home\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json | Invoke-Expression
+if (Test-Path $Home\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json) {
+    oh-my-posh --init --shell pwsh --config $Home\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json | Invoke-Expression
+}
+
+if (Test-Path $Home\projects\github.com\Ne4to\scripts\jandedobbeleer.omp.json) {
+    oh-my-posh --init --shell pwsh --config $Home\projects\github.com\Ne4to\scripts\jandedobbeleer.omp.json | Invoke-Expression
+}
 
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
