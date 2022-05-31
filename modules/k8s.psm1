@@ -69,13 +69,27 @@ Register-ArgumentCompleter -CommandName Set-KubectlNamespace -ParameterName Name
 }
 
 function Get-KubectlContext {
+    param (
+        [switch]$OneLine
+    )
+
     $kubeContext = (kubectl config view --minify -o json | ConvertFrom-Json -AsHashTable)
     if (! $kubeContext) { return $null }
 
-    return @{
-        Name      = $kubeContext.'current-context'
-        Namespace = $kubeContext.contexts[0].context['namespace'] ?? 'default'
+    $Name = $kubeContext.'current-context'
+    $Namespace = $kubeContext.contexts[0].context['namespace'] ?? 'default'
+
+    if ($OneLine) {
+        return "$Name / $Namespace"
+    } else {
+        return @{
+            Name      = $Name
+            Namespace = $Namespace
+        }
     }
 }
 
-Export-ModuleMember -Function Set-KubectlContext, Set-KubectlNamespace, Get-KubectlContext -Alias *
+function Get-KubectlContextOneLine { Get-KubectlContext -OneLine }
+Set-Alias -Name kx -Value Get-KubectlContextOneLine
+
+Export-ModuleMember -Function Set-KubectlContext, Set-KubectlNamespace, Get-KubectlContext, Get-KubectlContextOneLine -Alias *
