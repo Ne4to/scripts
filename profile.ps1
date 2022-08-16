@@ -79,6 +79,10 @@ function cpwd {
     Get-Location | Set-Clipboard
 }
 
+function dockerps {
+    docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}'
+}
+
 # setup oh-my-posh
 if (Test-Path $Home\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json) {
     oh-my-posh --init --shell pwsh --config $Home\projects\GitHub\Ne4to\scripts\jandedobbeleer.omp.json | Invoke-Expression
