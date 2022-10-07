@@ -21,7 +21,7 @@ function SPL4 { Set-ParentLocation -Depth 4 }
 Set-Alias -Name ..... -Value SPL4
 
 function Set-LocationToProjects {
-  $FullPath = Join-Path -Path $env:HOME "projects"
+  $FullPath = Join-Path -Path $HOME "projects"
   Set-Location $FullPath
 }
 Set-Alias -Name cdp -Value Set-LocationToProjects

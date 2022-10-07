@@ -24,7 +24,7 @@ switch ($OutputQuotes) {
 }
 
 if ($ToClipboard){
-    Set-ClipboardText $Result
+    Set-Clipboard $Result
 } else {
     Write-Output $Result
 }
