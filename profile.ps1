@@ -24,6 +24,12 @@ Import-Module PSReadLine
 Set-PSReadLineOption -PredictionSource History
 Set-PSReadLineOption -PredictionViewStyle ListView
 
+# install posh-git
+if (!(Get-Module posh-git -ListAvailable)) {
+    Install-Module posh-git -Scope CurrentUser -Force
+}
+Import-Module posh-git
+
 $modulesPath = Join-Path -Path ~ -ChildPath "projects\github.com\Ne4to\scripts\modules"
 if (-not (Test-Path $modulesPath)) {
     $modulesPath = Join-Path -Path ~ -ChildPath "projects\GitHub\Ne4to\scripts\modules"
