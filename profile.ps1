@@ -80,6 +80,10 @@ function cpwd {
 }
 
 function dockerps {
+    docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}'
+}
+
+function dockerpsa {
     docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}'
 }
 
