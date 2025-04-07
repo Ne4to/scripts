@@ -127,13 +127,54 @@ function Get-GitRepositoryOrigin {
             $repository = $RepositoryCollection[$repositoryIndex]
             $repositoryPath = $repository.Parent.FullName
 
-            Write-Progress -Activity "Processing git pull" -Status "Repository ($repositoryPath)" -PercentComplete ($repositoryIndex * 100 / $RepositoryCollection.length)
+            Write-Progress -Activity "Processing" -Status "Repository ($repositoryPath)" -PercentComplete ($repositoryIndex * 100 / $RepositoryCollection.length)
             Write-Information "Processing $repositoryPath"
 
             $process = Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "config","--get","remote.origin.url" -WorkingDirectory $repositoryPath
             $objProps = @{
             Path = $repositoryPath
             Origin = $process.StandardOutput
+            }
+            $obj = New-Object psobject -Property $objProps
+            Write-Output $obj
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Get-GitRepositoryStatus {
+    [CmdletBinding()]
+    param (
+        [parameter()]
+        [UInt32]$Depth = 1
+    )
+    # https://stackoverflow.com/questions/20433867/git-ahead-behind-info-between-master-and-branch
+    # > git rev-list --left-right --count master...origin/master
+    # 0       1
+    # This output means: "Compared to master, origin/master is 0 commit ahead and 1 commits behind."
+
+    $env:LC_ALL='C.UTF-8'
+    $gitFullPath = (Get-Command -CommandType Application git -ErrorAction Stop).Source
+    Push-Location
+
+    try {
+        $RepositoryCollection = Get-ChildItem -Include ".git" -Recurse -Depth $Depth -Directory -Attributes Hidden
+
+        for ($repositoryIndex = 0; $repositoryIndex -lt $RepositoryCollection.length; $repositoryIndex++) {
+            $repository = $RepositoryCollection[$repositoryIndex]
+            $repositoryPath = $repository.Parent.FullName
+
+            Write-Progress -Activity "Processing" -Status "Repository ($repositoryPath)" -PercentComplete ($repositoryIndex * 100 / $RepositoryCollection.length)
+            Write-Information "Processing $repositoryPath"
+
+            $currentBranch = (Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "branch","--show-current" -WorkingDirectory $repositoryPath).StandardOutput
+            # $process = Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "config","--get","remote.origin.url" -WorkingDirectory $repositoryPath
+            $objProps = @{
+                Path = $repositoryPath
+                Branch = $currentBranch
+                # Origin = $process.StandardOutput
             }
             $obj = New-Object psobject -Property $objProps
             Write-Output $obj
@@ -153,4 +194,5 @@ Set-Alias -Name gite -Value Open-GitExtensions
 Export-ModuleMember -Function Get-GitRepositoryModifiedFiles
 Export-ModuleMember -Function Update-GitRepository
 Export-ModuleMember -Function Get-GitRepositoryOrigin
+Export-ModuleMember -Function Get-GitRepositoryStatus
 Export-ModuleMember -Function Open-GitExtensions -Alias gite
