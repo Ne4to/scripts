@@ -67,12 +67,35 @@ function Get-GitRepositoryModifiedFiles {
     # file:///C:/Program%20Files/Git/mingw64/share/doc/git-doc/git-status.html
 }
 
+function Get-GitRepositories {
+    [CmdletBinding()]
+    param (
+        [parameter()]
+        [UInt32]$Depth = 1,
+        [parameter()]
+        [string]$BasePath = $(Get-Location)
+    )
+
+    $env:LC_ALL='C.UTF-8'
+
+    Get-ChildItem -Path $BasePath -Include ".git" -Recurse -Depth $Depth -Directory -Attributes Hidden |
+        ForEach-Object {
+            $Path = $_.Parent.FullName
+
+            [PSCustomObject]@{
+                Path = $Path
+                Name = $Path.Substring($BasePath.Length + 1) # +1 for `\`
+            }
+        }
+}
+
 function Update-GitRepository {
     [CmdletBinding()]
     param (
         [parameter()]
         [UInt32]$Depth = 1,
-        [switch]$ShowLog
+        [switch]$ShowLog,
+        [switch]$UseDefaultBranch
     )
 
     $env:LC_ALL='C.UTF-8'
@@ -87,17 +110,20 @@ function Update-GitRepository {
     Push-Location
 
     try {
-        $RepositoryCollection = Get-ChildItem -Include ".git" -Recurse -Depth $Depth -Directory -Attributes Hidden
+        Get-GitRepositories -Depth $Depth |
+            ForEach-Object {
+                $repositoryPath = $_.Path
+                $Name = $_.Name
 
-        for ($repositoryIndex = 0; $repositoryIndex -lt $RepositoryCollection.length; $repositoryIndex++) {
-            $repository = $RepositoryCollection[$repositoryIndex]
-            $repositoryPath = $repository.Parent.FullName
+                Write-Progress -Activity "Processing git pull" -Status "Repository ($Name)"
+                Write-Information "Processing $Name"
 
-            Write-Progress -Activity "Processing git pull" -Status "Repository ($repositoryPath)" -PercentComplete ($repositoryIndex * 100 / $RepositoryCollection.length)
-            Write-Information "Processing $repositoryPath"
-
-            Start-ProcessWithOutputStreaming -FilePath $gitFullPath -ArgumentList "pull","--progress" -WorkingDirectory $repositoryPath | Out-Null
-        }
+                if ($UseDefaultBranch) {
+                    # TODO support `main` or other non default branch
+                    Start-ProcessWithOutputStreaming -FilePath $gitFullPath -ArgumentList "checkout","master" -WorkingDirectory $repositoryPath | Out-Null
+                }
+                Start-ProcessWithOutputStreaming -FilePath $gitFullPath -ArgumentList "pull","--progress" -WorkingDirectory $repositoryPath | Out-Null
+            }
     }
     finally {
         Pop-Location
@@ -121,23 +147,21 @@ function Get-GitRepositoryOrigin {
     Push-Location
 
     try {
-        $RepositoryCollection = Get-ChildItem -Include ".git" -Recurse -Depth $Depth -Directory -Attributes Hidden
+        Get-GitRepositories -Depth $Depth |
+            ForEach-Object {
+                $repositoryPath = $_.Path
+                $Name = $_.Name
 
-        for ($repositoryIndex = 0; $repositoryIndex -lt $RepositoryCollection.length; $repositoryIndex++) {
-            $repository = $RepositoryCollection[$repositoryIndex]
-            $repositoryPath = $repository.Parent.FullName
+                Write-Progress -Activity "Processing" -Status "Repository ($Name)"
+                Write-Information "Processing $Name"
 
-            Write-Progress -Activity "Processing" -Status "Repository ($repositoryPath)" -PercentComplete ($repositoryIndex * 100 / $RepositoryCollection.length)
-            Write-Information "Processing $repositoryPath"
-
-            $process = Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "config","--get","remote.origin.url" -WorkingDirectory $repositoryPath
-            $objProps = @{
-            Path = $repositoryPath
-            Origin = $process.StandardOutput
+                $process = Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "config","--get","remote.origin.url" -WorkingDirectory $repositoryPath
+                [PSCustomObject]@{
+                    Name = $Name
+                    Path = $repositoryPath
+                    Origin = $process.StandardOutput
+                }
             }
-            $obj = New-Object psobject -Property $objProps
-            Write-Output $obj
-        }
     }
     finally {
         Pop-Location
@@ -160,25 +184,23 @@ function Get-GitRepositoryStatus {
     Push-Location
 
     try {
-        $RepositoryCollection = Get-ChildItem -Include ".git" -Recurse -Depth $Depth -Directory -Attributes Hidden
+        Get-GitRepositories -Depth $Depth |
+            ForEach-Object {
+                $repositoryPath = $_.Path
+                $Name = $_.Name
 
-        for ($repositoryIndex = 0; $repositoryIndex -lt $RepositoryCollection.length; $repositoryIndex++) {
-            $repository = $RepositoryCollection[$repositoryIndex]
-            $repositoryPath = $repository.Parent.FullName
+                Write-Progress -Activity "Processing" -Status "Repository ($Name)"
+                Write-Information "Processing $Name"
 
-            Write-Progress -Activity "Processing" -Status "Repository ($repositoryPath)" -PercentComplete ($repositoryIndex * 100 / $RepositoryCollection.length)
-            Write-Information "Processing $repositoryPath"
-
-            $currentBranch = (Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "branch","--show-current" -WorkingDirectory $repositoryPath).StandardOutput
-            # $process = Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "config","--get","remote.origin.url" -WorkingDirectory $repositoryPath
-            $objProps = @{
-                Path = $repositoryPath
-                Branch = $currentBranch
-                # Origin = $process.StandardOutput
+                $currentBranch = (Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "branch","--show-current" -WorkingDirectory $repositoryPath).StandardOutput
+                # $process = Start-ProcessWithOutput -FilePath $gitFullPath -ArgumentList "config","--get","remote.origin.url" -WorkingDirectory $repositoryPath
+                [PSCustomObject]@{
+                    Name = $Name
+                    Path = $repositoryPath
+                    Branch = $currentBranch
+                    # Origin = $process.StandardOutput
+                }
             }
-            $obj = New-Object psobject -Property $objProps
-            Write-Output $obj
-        }
     }
     finally {
         Pop-Location
@@ -192,6 +214,7 @@ function Open-GitExtensions {
 Set-Alias -Name gite -Value Open-GitExtensions
 
 Export-ModuleMember -Function Get-GitRepositoryModifiedFiles
+Export-ModuleMember -Function Get-GitRepositories
 Export-ModuleMember -Function Update-GitRepository
 Export-ModuleMember -Function Get-GitRepositoryOrigin
 Export-ModuleMember -Function Get-GitRepositoryStatus

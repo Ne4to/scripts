@@ -6,7 +6,7 @@ param(
 Set-StrictMode -Version 'Latest'
 
 '
-FROM mcr.microsoft.com/powershell
+FROM mcr.microsoft.com/powershell:7.4-mariner-2.0-arm64
 
 WORKDIR /app
 COPY . /build-context
