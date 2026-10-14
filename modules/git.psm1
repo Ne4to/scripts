@@ -1,4 +1,6 @@
+#Requires -Version 7
 Set-StrictMode -Version 'Latest'
+$ErrorActionPreference = 'Stop'
 
 function Get-GitRepositoryModifiedFiles {
     [CmdletBinding()]
@@ -81,12 +83,20 @@ function Get-GitRepositories {
     Get-ChildItem -Path $BasePath -Include ".git" -Recurse -Depth $Depth -Directory -Attributes Hidden |
         ForEach-Object {
             $Path = $_.Parent.FullName
+            Push-Location $Path
+            $DefaultBranch = Get-GitDefaultBranch
+            Pop-Location
 
             [PSCustomObject]@{
                 Path = $Path
                 Name = $Path.Substring($BasePath.Length + 1) # +1 for `\`
+                DefaultBranch = $DefaultBranch
             }
         }
+}
+
+function Get-GitDefaultBranch {
+    return ((git rev-parse --abbrev-ref origin/HEAD) -split "/")[1]
 }
 
 function Update-GitRepository {
@@ -119,8 +129,12 @@ function Update-GitRepository {
                 Write-Information "Processing $Name"
 
                 if ($UseDefaultBranch) {
-                    # TODO support `main` or other non default branch
-                    Start-ProcessWithOutputStreaming -FilePath $gitFullPath -ArgumentList "checkout","master" -WorkingDirectory $repositoryPath | Out-Null
+                    Push-Location $repositoryPath
+                    $DefaultBranch = Get-GitDefaultBranch
+                    Pop-Location
+                    Write-Information "Using branch $DefaultBranch"
+                    $CheckoutArguments = @("checkout", $DefaultBranch)
+                    Start-ProcessWithOutputStreaming -FilePath $gitFullPath -ArgumentList $CheckoutArguments -WorkingDirectory $repositoryPath | Out-Null
                 }
                 Start-ProcessWithOutputStreaming -FilePath $gitFullPath -ArgumentList "pull","--progress" -WorkingDirectory $repositoryPath | Out-Null
             }
@@ -207,6 +221,63 @@ function Get-GitRepositoryStatus {
     }
 }
 
+function Get-GitMergedBranches {
+    $DefaultBranch = Get-GitDefaultBranch
+    $IgnoreBranches = @($DefaultBranch, "release-$DefaultBranch")
+    $LocalBranches = git for-each-ref --format='%(refname:short)' refs/heads
+    $Result = @()
+    foreach ($Branch in $LocalBranches) {
+        if ($Branch -in $IgnoreBranches) { continue }
+        Write-Host "Checking branch $Branch"
+        $BranchVerbose = git branch -vv --list $Branch
+        $IsBranchGone = $BranchVerbose -like '*: gone]*'
+        if ($IsBranchGone) {
+            Write-Host "$Branch is gone" -ForegroundColor Yellow
+            $Result += $Branch
+            continue
+        }
+        $BranchCommitId = git log $Branch --oneline --max-count=1 --format=%h
+        $BranchCommitMessage = git log $Branch --oneline --max-count=1 --format=%s
+        $BranchCommitDate = git log $Branch --oneline --max-count=1 --date=iso-strict --format=%ad
+        Write-Host "Last commit $BranchCommitId $BranchCommitMessage"
+
+        $DefaultBranchCandidates = git log --reverse --oneline --format=%h --since-as-filter=$BranchCommitDate
+        if (-not $DefaultBranchCandidates) {
+            Write-Host "no commit candidates found in $DefaultBranch branch"
+        }
+
+        foreach($CandidateId in $DefaultBranchCandidates) {
+            Write-Host "Checking candidate commit $CandidateId"
+            $Diff = git diff --shortstat "$BranchCommitId..$CandidateId"
+            if (-not $Diff) {
+                Write-Host -ForegroundColor Green "Found merge commit $CandidateId"
+                $Result += $Branch
+                break
+            }
+        }
+    }
+
+    return $Result
+}
+
+function Remove-GitMergedBranches {
+    $AllBranches = @(Get-GitMergedBranches)
+    foreach ($Branch in $AllBranches) {
+        $BranchCommitMessage = git log $Branch --oneline --max-count=1 --format=%s
+        $BranchCommitDate = git log $Branch --oneline --max-count=1 --date=iso-strict --format=%ad
+        $BranchCommitAuthor = git log $Branch --oneline --max-count=1 --date=iso-strict --format=%an
+        $BranchVerbose = git branch -vv --list $Branch
+        $IsBranchGone = $BranchVerbose -like '*: gone]*'
+
+        $response = Read-Host "$BranchCommitDate`n$BranchCommitAuthor`n$BranchCommitMessage`nGone: $IsBranchGone`nDelete $Branch branch? (y/n)"
+        if ($response -eq "y") {
+            git branch -D $Branch
+        }
+    }
+
+    # TODO "C:\Program Files\Git\bin\git.exe" -c fetch.parallel=0 -c submodule.fetchjobs=0 fetch --progress "--all" --prune --force
+}
+
 function Open-GitExtensions {
     Start-Process gite.exe -ArgumentList 'openrepo','.' -NoNewWindow
 }
@@ -215,7 +286,10 @@ Set-Alias -Name gite -Value Open-GitExtensions
 
 Export-ModuleMember -Function Get-GitRepositoryModifiedFiles
 Export-ModuleMember -Function Get-GitRepositories
+Export-ModuleMember -Function Get-GitDefaultBranch
 Export-ModuleMember -Function Update-GitRepository
 Export-ModuleMember -Function Get-GitRepositoryOrigin
 Export-ModuleMember -Function Get-GitRepositoryStatus
+Export-ModuleMember -Function Get-GitMergedBranches
+Export-ModuleMember -Function Remove-GitMergedBranches
 Export-ModuleMember -Function Open-GitExtensions -Alias gite

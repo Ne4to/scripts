@@ -5,9 +5,18 @@ Set-StrictMode -Version 'Latest'
 function Set-KubeConfig {
     if ($global:KubeConfigPath) { return }
 
+    $BaseConfig = "$Home\.kube\config"
+
+    if ($env:KUBECONFIG) {
+        $items = $env:KUBECONFIG -split ';'
+        if ($items.Length -eq 1) {
+            $BaseConfig = $items[0]
+        }
+    }
+
     $global:KubeConfigPath = New-TemporaryFile
-    Copy-Item "$Home\.kube\config" $global:KubeConfigPath
-    $env:KUBECONFIG = "$global:KubeConfigPath;$Home\.kube\config"
+    Copy-Item "$BaseConfig" $global:KubeConfigPath
+    $env:KUBECONFIG = "$global:KubeConfigPath;$BaseConfig"
 }
 
 function Set-KubectlContext {
